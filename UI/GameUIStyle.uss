@@ -1,0 +1,7 @@
+.healthbar-size {
+    width: 500px;
+}
+.crosshair-line {
+    background-color: white;
+    opacity: 0.9;
+}

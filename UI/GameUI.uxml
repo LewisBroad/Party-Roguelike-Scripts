@@ -1,0 +1,14 @@
+<engine:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:engine="UnityEngine.UIElements" xmlns:editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/Scripts/UI/GameUIStyle.uss?fileID=7433441132597879392&amp;guid=422c4ac158845534da4f7b14ff14d4a8&amp;type=3#GameUIStyle" />
+    <engine:VisualElement name="HealthBarBackground" class="healthbar-size" style="flex-grow: 1; position: absolute; height: 150px; background-image: url(&quot;project://database/Assets/Scripts/UI/HealthbarBackground.png?fileID=2800000&amp;guid=bbc2d4da0f271d749a66fc9bf1009543&amp;type=3#HealthbarBackground&quot;); bottom: 0;">
+        <engine:VisualElement name="HealthBarMask" style="flex-grow: 1; position: absolute; width: 88%; height: 100%; overflow: hidden; transition-property: width; transition-duration: 0.5s; transition-timing-function: ease-out-bounce;">
+            <engine:VisualElement name="HealthBarFill" class="healthbar-size" style="flex-grow: 1; background-image: url(&quot;project://database/Assets/Scripts/UI/HealthBarFill.png?fileID=2800000&amp;guid=f58b7ebc8a011784da85c9ccaf8df463&amp;type=3#HealthBarFill&quot;); position: absolute; height: 100%;" />
+        </engine:VisualElement>
+        <engine:VisualElement name="ShieldBarMask" style="flex-grow: 1; position: absolute; width: 88%; height: 100%; overflow: hidden; transition-property: width; transition-duration: 0.5s; transition-timing-function: ease-out-bounce;">
+            <engine:VisualElement name="ShieldBarFill" class="healthbar-size" style="flex-grow: 1; background-image: url(&quot;project://database/Assets/Scripts/UI/SupportProject/Tutorial%20Assets/ShieldBarFill%201.png?fileID=2800000&amp;guid=9c798f6e432664447a1961b3dfc377c7&amp;type=3#ShieldBarFill 1&quot;); position: absolute; height: 100%;" />
+        </engine:VisualElement>
+        <engine:VisualElement name="HealthBarCircle" style="flex-grow: 1; position: absolute; width: 100px; height: 100px; background-image: url(&quot;project://database/Assets/Scripts/UI/Circle.png?fileID=2800000&amp;guid=6dd63deb1c058694c8729e94919d4076&amp;type=3#Circle&quot;); padding-top: 39px; padding-right: 0; padding-left: 27px; top: 27px; left: 2px;" />
+        <engine:Label text="Label" name="HealthLabel" style="position: absolute; width: 100%; height: 100%; -unity-text-align: middle-left; font-size: 28px; margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 150px;" />
+        <engine:Label text="Label" name="ShieldLabel" style="position: absolute; width: 100%; height: 100%; -unity-text-align: middle-left; font-size: 28px; margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 300px;" />
+    </engine:VisualElement>
+</engine:UXML>
