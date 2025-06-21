@@ -126,7 +126,8 @@ public class BaseCharacter : MonoBehaviour, IDamageable
         float dmg = (float)amount;
         if (dmg > 0)
         {
-            float effectiveDamage = Mathf.Max(0, dmg - armor.BaseValue);
+            float effectiveDamage = dmg *(1f - armor.BaseValue / 100f); // Calculate effective damage after armor reduction
+            effectiveDamage = Mathf.Max(0, effectiveDamage);
             if (Shield.BaseValue > 0)
             {
                 float shieldAbsorb = Mathf.Min(Shield.BaseValue, effectiveDamage);

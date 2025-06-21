@@ -49,7 +49,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   lifetime: 5
-  damage: 5
+  damage: 6
   splatterPrefab: {fileID: 0}
   hitLayers:
     serializedVersion: 2
