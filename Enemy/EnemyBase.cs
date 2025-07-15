@@ -99,6 +99,7 @@ public class EnemyBase : MonoBehaviour, IDamageable
         agent = GetComponent<NavMeshAgent>();
         rb = GetComponent<Rigidbody>();
         originalSpeed = agent.speed;
+        agent.Warp(transform.position); // if it's already set
     }
 
     protected void InitialiseHealthBar()

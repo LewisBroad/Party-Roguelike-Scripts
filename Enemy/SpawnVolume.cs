@@ -34,26 +34,16 @@ public class SpawnVolume : MonoBehaviour
 
             if (Physics.Raycast(rayStart, Vector3.down, out RaycastHit hit, 100f, ~0, QueryTriggerInteraction.Ignore))
             {
-                Debug.DrawRay(rayStart, Vector3.down * 100f, Color.yellow, 3f);
-
                 if (NavMesh.SamplePosition(hit.point, out NavMeshHit navHit, 2f, NavMesh.AllAreas))
                 {
-                    Debug.DrawRay(navHit.position, Vector3.up * 2f, Color.green, 3f);
-                    Debug.Log($" Valid spawn point: {navHit.position} from volume {gameObject.name}");
+                    Debug.DrawRay(rayStart, Vector3.down * 100f, Color.cyan, 2f);
+                    Debug.Log($"[SpawnVolume] Hit at {hit.point}, NavMesh at {navHit.position}");
                     return navHit.position;
                 }
-                else
-                {
-                    Debug.LogWarning($" No NavMesh at ray hit {hit.point} in volume {gameObject.name}");
-                }
-            }
-            else
-            {
-                Debug.LogWarning($" Raycast missed ground in volume {gameObject.name} from {rayStart}");
             }
         }
 
-        Debug.LogWarning($" Volume {gameObject.name} failed to find valid position after 10 attempts");
+        Debug.LogWarning($"[SpawnVolume] {gameObject.name} failed to find a valid NavMesh point.");
         return Vector3.zero;
     }
 

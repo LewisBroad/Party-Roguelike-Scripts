@@ -69,6 +69,7 @@ public class ObjectPooler : MonoBehaviour
         }
 
         poolDictionary[tag].Enqueue(objectToSpawn);
+        Debug.Log($"[ObjectPooler] Setting position to {position}");
 
         return objectToSpawn;
     }

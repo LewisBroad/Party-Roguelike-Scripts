@@ -145,12 +145,6 @@ public class SpawnManager : MonoBehaviour
         GameObject enemyGO = ObjectPooler.Instance.SpawnFromPool(enemyTag, spawnPos, Quaternion.identity);
 
         Debug.DrawRay(spawnPos, Vector3.up * 2f, Color.green, 3f);
-        Debug.DrawRay(spawnPos, Vector3.down * 2f, Color.red, 3f);
-        NavMeshHit test;
-        if (!NavMesh.SamplePosition(spawnPos, out test, 2f, NavMesh.AllAreas))
-        {
-            Debug.LogWarning($"Spawned at non-NavMesh position: {spawnPos}");
-        }
 
 
         if (enemyGO.TryGetComponent<EnemyBase>(out EnemyBase enemy))
@@ -163,22 +157,24 @@ public class SpawnManager : MonoBehaviour
             {
                 float hoverHeight = FlyingEnemy.idleHoverHeight;
                 spawnPos.y += hoverHeight;
-/*                if (groundedPosition != position)
-                {
-                    spawnPos = new Vector3(groundedPosition.x, groundedPosition.y + hoverHeight, groundedPosition.z);
-                }
-                else
-                {
-                    spawnPos = new Vector3(position.x, position.y + hoverHeight + 10f, position.z);
-                }*/
-/*            Vector3 hoverPos = new Vector3(groundedPosition.x, groundedPosition.y + hoverHeight, groundedPosition.z);
-            enemy.transform.position = hoverPos;*/
+                Debug.Log($"[SpawnEnemy] FlyingEnemy hover adjusted to Y = {spawnPos.y}");
+                /*                if (groundedPosition != position)
+                                {
+                                    spawnPos = new Vector3(groundedPosition.x, groundedPosition.y + hoverHeight, groundedPosition.z);
+                                }
+                                else
+                                {
+                                    spawnPos = new Vector3(position.x, position.y + hoverHeight + 10f, position.z);
+                                }*/
+                /*            Vector3 hoverPos = new Vector3(groundedPosition.x, groundedPosition.y + hoverHeight, groundedPosition.z);
+                            enemy.transform.position = hoverPos;*/
             }
                 // Grounded enemies also get set just in case the pooler didn't
             enemy.transform.position = spawnPos;
 
 
             enemy.BeginSpawning(); // <<< Add this
+            Debug.Log($"[SpawnEnemy] Spawning at {spawnPos}");
 
             activeEnemies.Add(enemy);
             enemy.OnDeath += () => activeEnemies.Remove(enemy);
@@ -205,14 +201,12 @@ public class SpawnManager : MonoBehaviour
             SpawnVolume volume = spawnVolumes[Random.Range(0, spawnVolumes.Count)];
             Vector3 rawPoint = volume.GetRandomPointInVolume();
 
-            // Enforce NavMesh position
-            if (NavMesh.SamplePosition(rawPoint, out NavMeshHit navHit, 2f, NavMesh.AllAreas))
-            {
-                return navHit.position;
-            }
+            // No second sampling here — already NavMesh-validated inside SpawnVolume
+            if (rawPoint != Vector3.zero)
+                return rawPoint;
         }
 
-        Debug.LogWarning("Failed to find a valid NavMesh position from spawn volumes.");
+        Debug.LogWarning("Failed to find a valid position from spawn volumes.");
         return Vector3.zero;
     }
 
