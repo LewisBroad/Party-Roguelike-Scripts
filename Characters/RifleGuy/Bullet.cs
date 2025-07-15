@@ -97,7 +97,7 @@ public class Bullet : MonoBehaviour
         if (other.TryGetComponent(out EnemyBase enemy))
         {
             enemy.TakeDamage(damage, gameObject);
-            enemy.ApplySlow(0.2f, 0.5f);
+            if(enemy.Health.BaseValue != 0)enemy.ApplySlow(0.2f, 0.5f);
         }
 
         Destroy(transform.root.gameObject);

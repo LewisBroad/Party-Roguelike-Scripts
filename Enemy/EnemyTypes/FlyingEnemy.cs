@@ -1,8 +1,10 @@
 using System.IO;
 using UnityEditor.VersionControl;
+using System.Collections;
+
 using UnityEngine;
 
-public class FlyingEnemy : EnemyBase
+public class FlyingEnemy : EnemyBase, IPooledObject
 {
     public float moveSpeed = 5f;
     public float flyHeight = 3f;
@@ -15,6 +17,13 @@ public class FlyingEnemy : EnemyBase
     public float RangedAttackRange = 10f; // Range for ranged attacks
     public float repositionThreshold = 0.5f; // Optional jitter prevention
 
+
+    [SerializeField] private float roamRadius = 5f; // Radius within which the enemy roams when idle
+    [SerializeField] private float roamCooldown = 3f; // Speed at which the enemy roams when idle
+    private Vector3 currentRoamTarget;
+    private float roamTimer;
+    public float idleHoverHeight = 3f; // Height at which the enemy hovers when idle
+
     public GameObject projectilePrefab;
     public Transform projectileSpawnPoint;
     public float projectileSpeed = 10f;
@@ -23,16 +32,31 @@ public class FlyingEnemy : EnemyBase
     public LayerMask damageableLayers;
 
     //private Rigidbody rb;
+    public void OnObjectSpawn()
+    {
+        Health.BaseValue = maxHealth.BaseValue;
+        currentState = enemyState.idle;
+        //transform.position = new Vector3(transform.position.x, idleHoverHeight, transform.position.z);
+    }
 
     protected override void Start()
     {
         // Disable NavMeshAgent and gravity
         InitialiseHealth();
         InitialiseHealthBar();
+        //Vector3 clampedSpawn = new Vector3(transform.position.x, idleHoverHeight, transform.position.z);
+        //transform.position = clampedSpawn; // Ensure the enemy starts at the correct height
         if (agent != null) agent.enabled = false;
         rb = GetComponent<Rigidbody>();
         rb.useGravity = false;
-        rb.isKinematic = false; // Let physics apply movement if needed
+        StartCoroutine(EnablePhysicsNextFrame());
+
+        rb.constraints = RigidbodyConstraints.FreezeRotation | RigidbodyConstraints.FreezePositionY;
+    }
+    private IEnumerator EnablePhysicsNextFrame()
+    {
+        yield return null;
+        rb.isKinematic = false;
     }
 
     protected override void Update()
@@ -43,6 +67,11 @@ public class FlyingEnemy : EnemyBase
         {
             //ChasePlayerInAir();
             ChaseAndAttackPlayer();
+        }
+        if (currentState == enemyState.idle)
+        {
+            IdleHover();
+            IdleRoam();
         }
     }
 
@@ -163,5 +192,37 @@ public class FlyingEnemy : EnemyBase
     {
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position + transform.forward * meleeRadius, meleeRadius);
+    }
+
+    private void IdleHover()
+    {
+        Vector3 targetPos = new Vector3(transform.position.x, idleHoverHeight, transform.position.z);
+        Vector3 smoothedPos = Vector3.Lerp(transform.position, targetPos, Time.deltaTime * moveSpeed);
+        rb.MovePosition(smoothedPos);
+    }
+
+    private void IdleRoam()
+    {
+        if(Vector3.Distance(transform.position, currentRoamTarget) < 0.5f || roamTimer <= 0f){
+            PickNewRoamTarget();
+            roamTimer = roamCooldown;
+        }
+        roamTimer -= Time.deltaTime;
+        Vector3 direction = (currentRoamTarget - transform.position).normalized;
+        rb.MovePosition(transform.position + direction * moveSpeed *0.5f * Time.deltaTime);
+    }
+    private void PickNewRoamTarget()
+    {
+        Vector2 randomCircle = Random.insideUnitCircle * roamRadius;
+        currentRoamTarget = new Vector3(
+            transform.position.x + randomCircle.x,
+            idleHoverHeight,
+            transform.position.z + randomCircle.y
+        );
+    }
+    protected override void BecomeAngered()
+    {
+        base.BecomeAngered();
+        rb.constraints = RigidbodyConstraints.FreezeRotation | RigidbodyConstraints.FreezePositionY;
     }
 }

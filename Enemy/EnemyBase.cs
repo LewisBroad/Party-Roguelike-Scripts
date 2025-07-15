@@ -16,6 +16,7 @@ public class EnemyBase : MonoBehaviour, IDamageable
     [SerializeField] private GameObject[] possibleDrops;
 
 
+
     public enum enemyState { idle, Angered }
     public enemyState currentState;
     public Transform playerTarget;
@@ -23,11 +24,16 @@ public class EnemyBase : MonoBehaviour, IDamageable
     private float originalSpeed;
 
 
+    public bool IsSpawning { get; protected set; } = false;
+    public float spawnDuration = 1.5f; // How long they stay in spawn state
+    private float spawnTimer = 0f;
+
     public event System.Action OnHealthChange;
     protected NavMeshAgent agent;
     public Rigidbody rb;
     private Coroutine knockbackRoutine;
     private Coroutine slowCoroutine;
+    public event System.Action OnDeath;
 
 
     protected virtual void Start()
@@ -51,6 +57,30 @@ public class EnemyBase : MonoBehaviour, IDamageable
 
         InitialiseEnemyBase();
 
+    }
+    public virtual void BeginSpawning()
+    {
+        IsSpawning = true;
+        spawnTimer = spawnDuration;
+
+        // Trigger spawn animation here
+        Animator anim = GetComponent<Animator>();
+        if (anim != null)
+        {
+            anim.SetTrigger("Spawn");
+        }
+
+        // Optional: disable movement/attack temporarily
+        if (agent != null) agent.isStopped = true;
+    }
+    protected virtual void FinishSpawning()
+    {
+        IsSpawning = false;
+
+        // Re-enable movement
+        if (agent != null) agent.isStopped = false;
+
+        // Ready to act
     }
 
     protected virtual void InitialiseEnemyBase()
@@ -89,6 +119,16 @@ public class EnemyBase : MonoBehaviour, IDamageable
 
     protected virtual void Update()
     {
+        if (IsSpawning)
+        {
+            spawnTimer -= Time.deltaTime;
+            if (spawnTimer <= 0f)
+            {
+                FinishSpawning();
+            }
+            return; // Don't do anything else while spawning
+        }
+
         if (currentState == enemyState.idle && playerTarget != null)
         {
             float dist = Vector3.Distance(transform.position, playerTarget.position);
@@ -120,14 +160,16 @@ public class EnemyBase : MonoBehaviour, IDamageable
         }
 
     }
-    protected void BecomeAngered()
+    protected virtual void BecomeAngered()
     {
         currentState = enemyState.Angered;
+        rb.linearVelocity = Vector3.zero;
         Debug.Log($"{gameObject.name} is now angry!");
     }
 
     public virtual void TakeDamage(double amount, GameObject source)
     {
+        if (IsSpawning) return;
         Debug.Log($"{gameObject.name} took {amount} damage from {source.name}");
         healthBarUI.SetActive(true);
         if (enemyState.idle == currentState)
@@ -176,8 +218,10 @@ public class EnemyBase : MonoBehaviour, IDamageable
         DropLoot();
 
         healthBarUI.SetActive(false); // Hide health bar on death
+        OnDeath?.Invoke(); // Notify SpawnManager
 
-        Destroy(gameObject);
+        gameObject.SetActive(false);
+        //Destroy(gameObject);
     }
     private void DropLoot()
     {
@@ -192,6 +236,7 @@ public class EnemyBase : MonoBehaviour, IDamageable
 
     public void ApplySlow(float slowAmount, float duration)
     {
+        
         if (slowCoroutine != null)
         {
             StopCoroutine(slowCoroutine);
