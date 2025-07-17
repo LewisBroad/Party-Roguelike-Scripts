@@ -152,13 +152,9 @@ public class EnemyBase : MonoBehaviour, IDamageable
             Transform target = GetCurrentTarget();
           
         }
-        if (tauntTimer > 0f)
+        if (overrideTarget != null && Time.time > tauntTimer)
         {
-            tauntTimer -= Time.deltaTime;
-            if (tauntTimer <= 0f)
-            {
-                overrideTarget = null;
-            }
+            overrideTarget = null;
         }
 
         if (transform.position.y < -10f) // Check if the enemy has fallen off the map
@@ -299,53 +295,20 @@ public class EnemyBase : MonoBehaviour, IDamageable
         agent.enabled = true;
     }
 
-    public virtual void SetTemporaryTarget(Transform distraction, float duration)
-    {
-        StartCoroutine(TemporarilyRedirect(distraction, duration));
-    }
-
-    private IEnumerator TemporarilyRedirect(Transform distraction, float duration)
-    {
-        NavMeshAgent agent = GetComponent<NavMeshAgent>();
-        if (agent == null || distraction == null) yield break;
-
-        Vector3 originalDestination = agent.destination;
-        agent.SetDestination(distraction.position);
-
-        float elapsed = 0f;
-        while (elapsed < duration)
-        {
-            elapsed += Time.deltaTime;
-            agent.SetDestination(distraction.position); // Update to follow moving decoy
-            yield return null;
-        }
-
-        agent.SetDestination(originalDestination);
-    }
-
     public void TauntTo(Transform newTarget, float duration)
     {
         overrideTarget = newTarget;
-        tauntTimer = Time.time + duration;
+        tauntTimer = Time.time + duration; // not a countdown!
     }
 
     protected virtual Transform GetCurrentTarget()
     {
-        if (overrideTarget != null && Time.time < tauntTimer)
+        if (overrideTarget != null && Time.time < tauntTimer && overrideTarget.gameObject.activeInHierarchy)
         {
-            // Decoy is still active — return it
-            if (overrideTarget.gameObject.activeInHierarchy)
-            {
-                return overrideTarget;
-            }
-            else
-            {
-                // Decoy was destroyed or disabled — clear taunt
-                overrideTarget = null;
-                tauntTimer = 0f;
-            }
+            return overrideTarget;
         }
 
+        overrideTarget = null;
         return playerTarget;
     }
     public virtual void ClearTaunt()

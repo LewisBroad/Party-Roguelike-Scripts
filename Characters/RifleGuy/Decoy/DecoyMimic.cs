@@ -10,6 +10,7 @@ public class DecoyMimic : MonoBehaviour
     private double fireRate = 1f;
     private Transform currentTarget;
 
+
     void Start()
     {
         DecoyManager.Instance.SetDecoy(transform);
