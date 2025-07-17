@@ -53,4 +53,8 @@ public abstract class ActionBase : ScriptableObject
     public void ResetFireTimer() => fireTimer = 1f / fireRate;
 
     public abstract void Use(GameObject user);
+    public virtual void Use(GameObject user, Vector3 targetPosition)
+    {
+        Use(user); // Default: fallback to normal use
+    }
 }

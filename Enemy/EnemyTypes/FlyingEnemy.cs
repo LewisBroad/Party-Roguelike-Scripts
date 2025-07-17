@@ -63,11 +63,16 @@ public class FlyingEnemy : EnemyBase, IPooledObject
     {
         base.Update();
 
-        if (currentState == enemyState.Angered && playerTarget != null)
+        if (currentState == enemyState.Angered)
         {
-            //ChasePlayerInAir();
-            ChaseAndAttackPlayer();
+            playerTarget = GetCurrentTarget(); //  Always re-check best target
+
+            if (playerTarget != null)
+            {
+                ChaseAndAttackPlayer();
+            }
         }
+
         if (currentState == enemyState.idle)
         {
             IdleHover();
@@ -103,10 +108,16 @@ public class FlyingEnemy : EnemyBase, IPooledObject
 
     private void ChaseAndAttackPlayer()
     {
-        Vector3 targetPosition = playerTarget.position + Vector3.up * chaseHeightOffset;
-        float distanceToPlayer = Vector3.Distance(transform.position, targetPosition);
+        // Vector3 targetPosition = playerTarget.position + Vector3.up * chaseHeightOffset;
+        //float distanceToPlayer = Vector3.Distance(transform.position, targetPosition);
 
-        Vector3 lookDirection = (playerTarget.position - transform.position).normalized;
+        Transform currentTarget = GetCurrentTarget();
+        if(currentTarget == null) return;
+
+        Vector3 targetPosition = currentTarget.position + Vector3.up * chaseHeightOffset;
+        float distanceToTarget = Vector3.Distance(transform.position, targetPosition);
+
+        Vector3 lookDirection = (currentTarget.position - transform.position).normalized;
         lookDirection.y = 0f; // Keep the enemy looking horizontally
         if (lookDirection != Vector3.zero)
         {
@@ -115,24 +126,24 @@ public class FlyingEnemy : EnemyBase, IPooledObject
         }
         if (Time.time >= lastAttackTime + attackCooldown)
         {
-            if (distanceToPlayer <= attackRange)
+            if (distanceToTarget <= attackRange)
             {
                 // Within melee attack range
                 MeleeAttack();
             }
-            else if (distanceToPlayer <= RangedAttackRange)
+            else if (distanceToTarget <= RangedAttackRange)
             {
                 // Within ranged attack range
                 RangedAttack();
             }
-            else if (distanceToPlayer > stoppingDistance + repositionThreshold)
+            else if (distanceToTarget > stoppingDistance + repositionThreshold)
             {
                 // Only move if we're farther than the stopping distance
                 Vector3 direction = (targetPosition - transform.position).normalized;
                 rb.MovePosition(transform.position + direction * moveSpeed * Time.deltaTime);
             }
         }
-        else if (distanceToPlayer > stoppingDistance + repositionThreshold)
+        else if (distanceToTarget > stoppingDistance + repositionThreshold)
         {
             Vector3 direction = (targetPosition - transform.position).normalized;
             rb.MovePosition(transform.position + direction * moveSpeed * Time.deltaTime);
@@ -163,7 +174,11 @@ public class FlyingEnemy : EnemyBase, IPooledObject
             Rigidbody projRb = proj.GetComponent<Rigidbody>();
             if (projRb != null)
             {
-                Vector3 dir = (playerTarget.position - projectileSpawnPoint.position).normalized;
+                //Vector3 dir = (playerTarget.position - projectileSpawnPoint.position).normalized;
+                Transform currentTarget = GetCurrentTarget();
+                if (currentTarget == null) return;
+
+                Vector3 dir = (currentTarget.position - projectileSpawnPoint.position).normalized;
                 projRb.linearVelocity = dir * projectileSpeed;
             }
         }

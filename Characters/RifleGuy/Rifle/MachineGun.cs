@@ -36,7 +36,16 @@ public class MachineGun : ActionBase
     public override void Initialize(GameObject user)
     {
         Debug.Log("MachineGun initialized");
-        firePoint = user.GetComponent<BaseCharacter>().abilityPoint;
+        Transform foundFirePoint = user.transform.Find("AbilityPoint");
+        if (foundFirePoint != null)
+        {
+            firePoint = foundFirePoint;
+        }
+        else
+        {
+            Debug.LogError("Fire point not found on " + user.name);
+            firePoint = user.transform; // Fallback to the user's transform
+        }
         cam = Camera.main;
         currentInput = user.GetComponent<ICharacterInput>();
         gameUI = GameObject.FindFirstObjectByType<GameUIHandler>();

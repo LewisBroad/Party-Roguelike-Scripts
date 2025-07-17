@@ -35,14 +35,24 @@ public class GroundMeleeEnemy : EnemyBase, IPooledObject
     protected override void Update()
     {
         base.Update();
-        if (currentState == enemyState.Angered && playerTarget != null && agent.enabled)
+
+        if (currentState == enemyState.Angered && agent.enabled)
         {
-            agent.SetDestination(playerTarget.position);
-            float distance = Vector3.Distance(transform.position, playerTarget.position);
-            if (distance <= attackRange && Time.time > lastAttackTime + attackCooldown)
+            // Always get the current best target (decoy if active)
+            Transform currentTarget = GetCurrentTarget();
+
+            if (currentTarget != null)
             {
-                lastAttackTime = Time.time;
-                Attack();
+                playerTarget = currentTarget; // still used in Attack()
+
+                agent.SetDestination(currentTarget.position);
+
+                float distance = Vector3.Distance(transform.position, currentTarget.position);
+                if (distance <= attackRange && Time.time > lastAttackTime + attackCooldown)
+                {
+                    lastAttackTime = Time.time;
+                    Attack();
+                }
             }
         }
     }
