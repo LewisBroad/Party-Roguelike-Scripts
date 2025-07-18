@@ -14,10 +14,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   abilityName: Precision Strike
   description: Call down a missile from the ship to wipe out enemies in an area
-  cooldown: 25
+  cooldown: 5
   icon: {fileID: 0}
-  airStrikeMarkerPrefab: {fileID: 0}
-  explosionPrefab: {fileID: 0}
-  DelayBeforeStrike: 2
-  strikeRadius: 5
+  airStrikeMarkerPrefab: {fileID: 3988220680929381132, guid: de2561d5801b1184c91481e970ac9017, type: 3}
+  explosionPrefab: {fileID: 2321791279644760786, guid: 33a831366af1df64fa5f4d4b76cf1f2f, type: 3}
+  projectilePrefab: {fileID: 8168880644631885051, guid: b53a431a418019d4490977834e16ab9a, type: 3}
+  strikeDecalPrefab: {fileID: 4446050979688769879, guid: 4e309082288ad7c4aa63242e2a4089a2, type: 3}
+  delayBeforeStrike: 1.5
+  strikeRadius: 10
   damage: 100
+  numberOfStrikes: 8
+  timeBetweenStrikes: 0.3
+  projectileHeight: 30

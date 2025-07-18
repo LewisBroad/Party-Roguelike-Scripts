@@ -65,9 +65,9 @@ public class FlyingEnemy : EnemyBase, IPooledObject
 
         if (currentState == enemyState.Angered)
         {
-            playerTarget = GetCurrentTarget(); //  Always re-check best target
-
-            if (playerTarget != null)
+            // playerTarget = GetCurrentTarget(); //  Always re-check best target
+            Transform currentTarget = GetCurrentTarget();
+            if (currentTarget != null)
             {
                 ChaseAndAttackPlayer();
             }
@@ -79,32 +79,6 @@ public class FlyingEnemy : EnemyBase, IPooledObject
             IdleRoam();
         }
     }
-
-    /*private void ChasePlayerInAir()
-    {
-        Vector3 targetPosition = playerTarget.position + Vector3.up * chaseHeightOffset;
-        float distanceToPlayer = Vector3.Distance(transform.position, targetPosition);
-        if (distanceToPlayer > attackRange)
-        {
-            // Not close enough — move closer
-            Vector3 direction = (targetPosition - transform.position).normalized;
-            rb.MovePosition(transform.position + direction * moveSpeed * Time.deltaTime);
-        }
-        else if (distanceToPlayer <= attackRange + repositionThreshold)
-        {
-            // Within attack range — stop and attack
-            Attack();
-        }
-
-        // Optionally: rotate toward player
-        Vector3 lookDirection = (playerTarget.position - transform.position).normalized;
-        lookDirection.y = 0f;
-        if (lookDirection != Vector3.zero)
-        {
-            Quaternion lookRotation = Quaternion.LookRotation(lookDirection);
-            transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, Time.deltaTime * 5f);
-        }
-    }*/
 
     private void ChaseAndAttackPlayer()
     {

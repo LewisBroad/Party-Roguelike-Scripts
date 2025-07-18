@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 public class DecoyMimic : MonoBehaviour
 {
@@ -6,10 +7,15 @@ public class DecoyMimic : MonoBehaviour
     public ActionBase primaryAction;
     public float fireRange = 20f;
 
+    public float tauntRadius = 15f;
+    private float tauntDuration; // set in InitializeFromPlayer
+    private float tauntCheckInterval = 1f;
+    private float tauntCheckTimer;
+
     private double fireTimer;
     private double fireRate = 1f;
     private Transform currentTarget;
-
+    private List<EnemyBase> tauntedEnemies = new List<EnemyBase>();
 
     void Start()
     {
@@ -29,15 +35,19 @@ public class DecoyMimic : MonoBehaviour
             Debug.LogWarning("DecoyMimic: Player had no primary ability.");
         }
 
-        Destroy(gameObject, mimicDuration);     //  Move it here
-        TauntNearbyEnemies();                   //  Also move here so it's only called once we have the final duration
+        tauntDuration = mimicDuration;
+        Destroy(gameObject, mimicDuration);
+        TauntNearbyEnemies();
     }
+
 
     void Update()
     {
         if (primaryAction == null) return;
 
         fireTimer -= Time.deltaTime;
+        tauntCheckTimer -= Time.deltaTime;
+
         if (fireTimer <= 0f)
         {
             FindTarget();
@@ -46,6 +56,12 @@ public class DecoyMimic : MonoBehaviour
                 FireAtTarget(currentTarget);
                 fireTimer = 1f / fireRate;
             }
+        }
+
+        if (tauntCheckTimer <= 0f)
+        {
+            TauntNearbyEnemies();
+            tauntCheckTimer = tauntCheckInterval;
         }
 
         primaryAction?.UpdateAction();
@@ -101,31 +117,21 @@ public class DecoyMimic : MonoBehaviour
     }
     void TauntNearbyEnemies()
     {
-        float tauntRadius = 15f; // Adjustable
-        float tauntDuration = mimicDuration; // Matches mimic duration
-
         Collider[] hits = Physics.OverlapSphere(transform.position, tauntRadius);
         foreach (var col in hits)
         {
             EnemyBase enemy = col.GetComponent<EnemyBase>();
-            if (enemy != null)
+            if (enemy != null && !tauntedEnemies.Contains(enemy))
             {
                 enemy.TauntTo(transform, tauntDuration);
+                tauntedEnemies.Add(enemy);
             }
         }
     }
     private void OnDestroy()
     {
-        ClearTaunts();
-    }
-    void ClearTaunts()
-    {
-        float tauntRadius = 15f;
-
-        Collider[] hits = Physics.OverlapSphere(transform.position, tauntRadius);
-        foreach (var col in hits)
+        foreach (var enemy in tauntedEnemies)
         {
-            EnemyBase enemy = col.GetComponent<EnemyBase>();
             if (enemy != null && enemy.overrideTarget == transform)
             {
                 enemy.ClearTaunt();

@@ -25,6 +25,10 @@ public class PlayerInputHandler : MonoBehaviour, ICharacterInput
 
     [SerializeField] private float mouseSensitivityX = 5f;
     [SerializeField] private float mouseSensitivityY = 5f;
+    [SerializeField] private float jumpHeight = 2f;
+    [SerializeField] private float gravity = -9.81f;
+    private float verticalVelocity;
+    private bool isGrounded;
 
 
 
@@ -78,8 +82,25 @@ public class PlayerInputHandler : MonoBehaviour, ICharacterInput
     {
         Vector3 move = GetMovement();
         float speed = movespeed * (GetRun() ? sprintMultiplier : 1f); // Sprinting logic
-        controller.SimpleMove(move * speed);
+        //controller.SimpleMove(move * speed);
+        isGrounded = controller.isGrounded;
 
+        if (isGrounded && verticalVelocity < 0)
+        {
+            verticalVelocity = -2f; // Stick to ground
+        }
+
+        if (GetJump() && isGrounded)
+        {
+            verticalVelocity = Mathf.Sqrt(jumpHeight * -2f * gravity);
+        }
+
+        verticalVelocity += gravity * Time.deltaTime;
+
+        Vector3 velocity = move * speed;
+        velocity.y = verticalVelocity;
+
+        controller.Move(velocity * Time.deltaTime);
 
 
         /*        if(move != Vector3.zero)

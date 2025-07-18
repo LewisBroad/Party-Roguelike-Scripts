@@ -43,7 +43,7 @@ public class GroundMeleeEnemy : EnemyBase, IPooledObject
 
             if (currentTarget != null)
             {
-                playerTarget = currentTarget; // still used in Attack()
+                //playerTarget = currentTarget; // still used in Attack()
 
                 agent.SetDestination(currentTarget.position);
 
@@ -60,14 +60,19 @@ public class GroundMeleeEnemy : EnemyBase, IPooledObject
     public override void Attack()
     {
         base.Attack();
-        IDamageable damageableTarget = playerTarget.GetComponent<IDamageable>();
-        if (damageableTarget != null)
+        //IDamageable damageableTarget = playerTarget.GetComponent<IDamageable>();
+        Transform target = GetCurrentTarget();
+        if (target != null)
         {
-            damageableTarget.TakeDamage(attackDamage, gameObject);
-        }
-        else
-        {
-            Debug.LogWarning($"{playerTarget.name} is not damageable.");
+            IDamageable damageableTarget = target.GetComponent<IDamageable>();
+            if (damageableTarget != null)
+            {
+                damageableTarget.TakeDamage(attackDamage, gameObject);
+            }
+            else
+            {
+                Debug.LogWarning($"{playerTarget.name} is not damageable.");
+            }
         }
         //replace with damage to call to player if they implement IDamageable
         Debug.Log($"{gameObject.name} attacks for {attackDamage} damage! to {playerTarget.name}");
