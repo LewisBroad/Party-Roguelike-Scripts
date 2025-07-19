@@ -30,8 +30,9 @@ public class SpawnManager : MonoBehaviour
 
     [Header("Spawn Setup")]
     private Transform player;
-/*    public Vector2 mapMinBounds;
-    public Vector2 mapMaxBounds;*/
+    private List<Transform> allAllies = new List<Transform>();
+    /*    public Vector2 mapMinBounds;
+        public Vector2 mapMaxBounds;*/
     public int staticSpawnCount = 10;
     public int baseMaxEnemies = 20;
     private float spawnCooldown = 5f;
@@ -44,18 +45,38 @@ public class SpawnManager : MonoBehaviour
 
     void Start()
     {
-        GameObject playerGo = GameObject.FindGameObjectWithTag("Player");
-        if(playerGo != null)
+
+        // Clear the list first to avoid duplicates in case Start is called again
+        allAllies.Clear();
+
+        // Find all player and AI teammates by tag
+        GameObject[] playerObjects = GameObject.FindGameObjectsWithTag("Player");
+        GameObject[] aiObjects = GameObject.FindGameObjectsWithTag("AI");
+
+        foreach (GameObject obj in playerObjects)
         {
-            player = playerGo.transform;
+            allAllies.Add(obj.transform);
         }
-        else Debug.LogError("Player not found in the scene. Please ensure the player has the 'Player' tag.");
+
+        foreach (GameObject obj in aiObjects)
+        {
+            allAllies.Add(obj.transform);
+        }
+
+        if (allAllies.Count == 0)
+        {
+            Debug.LogError("No allies found in the scene. Ensure 'Player' and 'AITeammate' tags are assigned.");
+        }
+
+        // Static spawn logic
         if (spawnType == SpawnType.Static)
+        {
             for (int i = 0; i < staticSpawnCount; i++)
             {
                 Vector3 spawnPos = GetRandomPositionInBounds();
                 SpawnEnemy(spawnPos, EnemyBase.enemyState.idle);
             }
+        }
     }
 
     void Update()
@@ -149,7 +170,8 @@ public class SpawnManager : MonoBehaviour
 
         if (enemyGO.TryGetComponent<EnemyBase>(out EnemyBase enemy))
         {
-            enemy.playerTarget = player;
+            //enemy.playerTarget = player;
+            enemy.SetTargetList(allAllies);
             enemy.currentState = type;
 
 

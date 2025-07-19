@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   abilityName: Precision Strike
   description: Call down a missile from the ship to wipe out enemies in an area
-  cooldown: 5
+  cooldown: 25
   icon: {fileID: 0}
   airStrikeMarkerPrefab: {fileID: 3988220680929381132, guid: de2561d5801b1184c91481e970ac9017, type: 3}
   explosionPrefab: {fileID: 2321791279644760786, guid: 33a831366af1df64fa5f4d4b76cf1f2f, type: 3}

@@ -17,4 +17,6 @@ MonoBehaviour:
     an enemy
   cooldown: 12
   icon: {fileID: 0}
-  minePrefab: {fileID: 0}
+  minePrefab: {fileID: 7361963881885273741, guid: 56ce0b34bcfab0347b70728999df713a, type: 3}
+  throwForce: 5
+  maxAimDistance: 50

@@ -46,8 +46,14 @@ public class GroundMeleeEnemy : EnemyBase, IPooledObject
                 //playerTarget = currentTarget; // still used in Attack()
 
                 agent.SetDestination(currentTarget.position);
-
-                float distance = Vector3.Distance(transform.position, currentTarget.position);
+                if (Time.frameCount % 60 == 0 && !agent.pathPending) // Check once per second
+                {
+                    if (agent.pathStatus == NavMeshPathStatus.PathPartial || agent.pathStatus == NavMeshPathStatus.PathInvalid)
+                    {
+                        Debug.LogWarning($"{gameObject.name} cannot find a complete path to the target. Path status: {agent.pathStatus}");
+                    }
+                }
+                    float distance = Vector3.Distance(transform.position, currentTarget.position);
                 if (distance <= attackRange && Time.time > lastAttackTime + attackCooldown)
                 {
                     lastAttackTime = Time.time;
@@ -71,10 +77,10 @@ public class GroundMeleeEnemy : EnemyBase, IPooledObject
             }
             else
             {
-                Debug.LogWarning($"{playerTarget.name} is not damageable.");
+                Debug.LogWarning($"{target.name} is not damageable.");
             }
         }
         //replace with damage to call to player if they implement IDamageable
-        Debug.Log($"{gameObject.name} attacks for {attackDamage} damage! to {playerTarget.name}");
+        Debug.Log($"{gameObject.name} attacks for {attackDamage} damage! to {target.name}");
     }
 }

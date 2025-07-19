@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 public class DecoyMimic : MonoBehaviour
 {
-    public float mimicDuration = 20f;
+    public float mimicDuration = 15f;
     public ActionBase primaryAction;
     public float fireRange = 20f;
 

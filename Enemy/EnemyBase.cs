@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.UI;
 using System.Collections;
+using System.Collections.Generic;
 
 public class EnemyBase : MonoBehaviour, IDamageable
 {
@@ -15,75 +16,29 @@ public class EnemyBase : MonoBehaviour, IDamageable
     private Camera mainCam;
     [SerializeField] private GameObject[] possibleDrops;
 
-
-
     public enum enemyState { idle, Angered }
     public enemyState currentState;
-    public Transform playerTarget;
+    public Transform[] possibleTargets;
     public float aggroRange = 10f;
     private float originalSpeed;
 
     public Transform overrideTarget;
     private float tauntTimer = 0f;
 
-
     public bool IsSpawning { get; protected set; } = false;
-    public float spawnDuration = 1.5f; // How long they stay in spawn state
+    public float spawnDuration = 1.5f;
     private float spawnTimer = 0f;
 
     public event System.Action OnHealthChange;
-    protected NavMeshAgent agent;
-    public Rigidbody rb;
-    private Coroutine knockbackRoutine;
-    private Coroutine slowCoroutine;
     public event System.Action OnDeath;
 
+    protected NavMeshAgent agent;
+    public Rigidbody rb;
+    private Coroutine slowCoroutine;
 
     protected virtual void Start()
     {
-        /*        Health.BaseValue = maxHealth.BaseValue;
-                agent = GetComponent<NavMeshAgent>();
-                rb = GetComponent<Rigidbody>();
-                originalSpeed = agent.speed;
-                mainCam = Camera.main;
-                if(healthBarUI != null)
-                {
-                    Transform fillTransform = healthBarUI.transform.Find("Background/Fill");
-                    if (fillTransform != null)
-                    healthBarFill = fillTransform.GetComponent<Image>();
-                    else Debug.LogWarning("Fill image not found in health bar UI!");
-
-
-                    healthBarTransform = healthBarUI.transform;
-                    // healthBarUI.SetActive(false); // Hidden until damaged
-                }*/
-
         InitialiseEnemyBase();
-
-    }
-    public virtual void BeginSpawning()
-    {
-        IsSpawning = true;
-        spawnTimer = spawnDuration;
-
-        // Trigger spawn animation here
-        Animator anim = GetComponent<Animator>();
-        if (anim != null)
-        {
-            anim.SetTrigger("Spawn");
-        }
-
-        // Optional: disable movement/attack temporarily
-        if (agent != null) agent.isStopped = true;
-    }
-    protected virtual void FinishSpawning()
-    {
-        IsSpawning = false;
-
-        // Re-enable movement
-        if (agent != null) agent.isStopped = false;
-
-        // Ready to act
     }
 
     protected virtual void InitialiseEnemyBase()
@@ -92,17 +47,23 @@ public class EnemyBase : MonoBehaviour, IDamageable
         InitialiseNavMesh();
         InitialiseHealthBar();
     }
+
     protected void InitialiseHealth()
     {
         Health.BaseValue = maxHealth.BaseValue;
         mainCam = Camera.main;
     }
+
     protected void InitialiseNavMesh()
     {
         agent = GetComponent<NavMeshAgent>();
+        if (agent != null)
+        {
+            agent.baseOffset = 0.1f;
+            originalSpeed = agent.speed;
+            agent.Warp(transform.position);
+        }
         rb = GetComponent<Rigidbody>();
-        originalSpeed = agent.speed;
-        agent.Warp(transform.position); // if it's already set
     }
 
     protected void InitialiseHealthBar()
@@ -114,206 +75,178 @@ public class EnemyBase : MonoBehaviour, IDamageable
                 healthBarFill = fillTransform.GetComponent<Image>();
             else Debug.LogWarning("Fill image not found in health bar UI!");
 
-
             healthBarTransform = healthBarUI.transform;
-            // healthBarUI.SetActive(false); // Hidden until damaged
         }
     }
 
+    public virtual void BeginSpawning()
+    {
+        IsSpawning = true;
+        spawnTimer = spawnDuration;
+        if (agent != null) agent.isStopped = true;
+
+        Animator anim = GetComponent<Animator>();
+        if (anim) anim.SetTrigger("Spawn");
+    }
+
+    protected virtual void FinishSpawning()
+    {
+        IsSpawning = false;
+        if (agent != null) agent.isStopped = false;
+    }
 
     protected virtual void Update()
     {
         if (IsSpawning)
         {
             spawnTimer -= Time.deltaTime;
-            if (spawnTimer <= 0f)
-            {
-                FinishSpawning();
-            }
-            return; // Don't do anything else while spawning
+            if (spawnTimer <= 0f) FinishSpawning();
+            return;
         }
 
-        if (currentState == enemyState.idle && playerTarget != null)
+        if (currentState == enemyState.idle)
         {
-            float dist = Vector3.Distance(transform.position, playerTarget.position);
-            if (dist < aggroRange)
+            Transform target = GetCurrentTarget();
+            if (target != null && Vector3.Distance(transform.position, target.position) < aggroRange)
             {
                 BecomeAngered();
             }
         }
-        if (healthBarUI.activeSelf && mainCam != null)
+
+        if (healthBarUI != null && healthBarUI.activeSelf && mainCam != null)
         {
             healthBarTransform.position = transform.position + Vector3.up * 2.2f;
             healthBarTransform.rotation = Quaternion.LookRotation(healthBarTransform.position - mainCam.transform.position);
+        }
 
-        }
-        if (currentState == enemyState.Angered)
-        {
-            Transform target = GetCurrentTarget();
-          
-        }
         if (overrideTarget != null && Time.time > tauntTimer)
-        {
             overrideTarget = null;
-        }
 
-        if (transform.position.y < -10f) // Check if the enemy has fallen off the map
-        {
-            Debug.Log($"{gameObject.name} fell off the map and will be destroyed.");
+        if (transform.position.y < -10f || Health.BaseValue <= 0)
             Die();
-        }
-        if (Health.BaseValue <= 0)
-        {
-            Die();
-        }
-
     }
+
     protected virtual void BecomeAngered()
     {
         currentState = enemyState.Angered;
         rb.linearVelocity = Vector3.zero;
         Debug.Log($"{gameObject.name} is now angry!");
     }
+    public virtual void Attack()
+    {
+        Transform target = GetCurrentTarget();
+        if (target != null)
+        {
+            // Add attack logic here
+            Debug.Log($"{gameObject.name} attacks {target.name}");
+        }
+    }
 
     public virtual void TakeDamage(double amount, GameObject source)
     {
         if (IsSpawning) return;
-        Debug.Log($"{gameObject.name} took {amount} damage from {source.name}");
+
         healthBarUI.SetActive(true);
-        if (enemyState.idle == currentState)
-        {
-            BecomeAngered();
-        }
-        if (!healthBarUI.activeSelf)
-        {
-            Debug.Log($"{gameObject.name} health bar activated.");
-            healthBarUI.SetActive(true);
-        }
+        if (currentState == enemyState.idle) BecomeAngered();
+
         float damage = Mathf.Max(0, (float)amount - armour.BaseValue);
         Health.BaseValue -= damage;
         OnHealthChange?.Invoke();
 
-        Debug.Log($"{gameObject.name} took {damage} damage. Health: {Health.BaseValue}");
-
         if (healthBarFill != null)
-        {
-            float fill = Mathf.Clamp01((float)Health.BaseValue / maxHealth.BaseValue);
-            healthBarFill.fillAmount = fill;
-            Debug.Log($"Health: {Health.BaseValue}/{maxHealth.BaseValue} -> Fill: {fill}");
-        }
-
-        /*        Vector3 knockback = (transform.position - source.transform.position).normalized; // Adjust knockback force as needed
-                StartCoroutine(ApplyKnockback(knockback * 10f, 0.5f)); // Adjust force and duration as needed*/
-
+            healthBarFill.fillAmount = Mathf.Clamp01((float)Health.BaseValue / maxHealth.BaseValue);
 
         if (Health.BaseValue <= 0)
-        {
             Die();
-        }
     }
-    public virtual void Attack()
-    {
-        if (playerTarget != null)
-        {
-            // Add attack logic here
-            Debug.Log($"{gameObject.name} attacks {playerTarget.name}");
-        }
-    }
+
     protected virtual void Die()
     {
-        //play death effect
         Debug.Log($"{gameObject.name} died!");
         DropLoot();
 
-        healthBarUI.SetActive(false); // Hide health bar on death
-        OnDeath?.Invoke(); // Notify SpawnManager
-
+        healthBarUI.SetActive(false);
+        OnDeath?.Invoke();
         gameObject.SetActive(false);
-        //Destroy(gameObject);
     }
+
     private void DropLoot()
     {
         foreach (var item in possibleDrops)
         {
-            if (UnityEngine.Random.value < 0.5f) // 50% drop rate
-            {
+            if (Random.value < 0.5f)
                 Instantiate(item, transform.position, Quaternion.identity);
-            }
         }
     }
 
     public void ApplySlow(float slowAmount, float duration)
     {
-        
         if (slowCoroutine != null)
-        {
             StopCoroutine(slowCoroutine);
-        }
         slowCoroutine = StartCoroutine(SlowEffect(slowAmount, duration));
     }
 
     private IEnumerator SlowEffect(float slowAmount, float duration)
     {
-        if(agent != null) agent.speed = originalSpeed * (1f - slowAmount); // e.g., slowAmount = 0.5f for 50% slow
-
+        if (agent != null) agent.speed = originalSpeed * (1f - slowAmount);
         yield return new WaitForSeconds(duration);
-        if(agent != null) agent.speed = originalSpeed;
-        slowCoroutine = null;
-    }
-
-
-
-
-    IEnumerator ApplyKnockback(Vector3 force, float duration)
-    {
-        agent.enabled = false;                   // Stop NavMesh control
-        rb.isKinematic = false;                 // Allow physics
-        rb.AddForce(force, ForceMode.Impulse);  // Apply knockback
-
-        yield return new WaitForSeconds(duration);
-
-        rb.linearVelocity = Vector3.zero;
-        rb.isKinematic = true;                  // Stop physics interference
-        agent.enabled = true;                   // Resume NavMeshAgent control
-    }
-
-    private IEnumerator KnockbackRoutine(Vector3 direction, float force, float duration)
-    {
-        agent.enabled = false;
-        rb.isKinematic = false;
-        rb.useGravity = true;
-
-        rb.AddForce(direction.normalized * force, ForceMode.Impulse);
-
-        yield return new WaitForSeconds(duration);
-
-        rb.linearVelocity = Vector3.zero;
-        rb.angularVelocity = Vector3.zero;
-
-        rb.isKinematic = true;
-        rb.useGravity = false;
-        agent.enabled = true;
+        if (agent != null) agent.speed = originalSpeed;
     }
 
     public void TauntTo(Transform newTarget, float duration)
     {
         overrideTarget = newTarget;
-        tauntTimer = Time.time + duration; // not a countdown!
+        tauntTimer = Time.time + duration;
     }
 
-    protected virtual Transform GetCurrentTarget()
-    {
-        if (overrideTarget != null && Time.time < tauntTimer && overrideTarget.gameObject.activeInHierarchy)
-        {
-            return overrideTarget;
-        }
-
-        overrideTarget = null;
-        return playerTarget;
-    }
     public virtual void ClearTaunt()
     {
         overrideTarget = null;
         tauntTimer = 0f;
     }
+
+    protected virtual Transform GetCurrentTarget()
+    {
+        if (overrideTarget != null && Time.time < tauntTimer && overrideTarget.gameObject.activeInHierarchy)
+            return overrideTarget;
+
+        Transform closest = null;
+        float minDist = float.MaxValue;
+
+        foreach (Transform t in possibleTargets)
+        {
+            if (t == null || !t.gameObject.activeInHierarchy) continue;
+
+            float dist = Vector3.Distance(transform.position, t.position);
+            if (dist < minDist && dist < aggroRange)
+            {
+                minDist = dist;
+                closest = t;
+            }
+        }
+        return closest;
+    }
+
+    public virtual void SetTargetList(List<Transform> targets)
+    {
+        possibleTargets = targets.ToArray();
+    }
+
+    private void OnCollisionStay(Collision collision)
+    {
+        if (collision.collider.CompareTag("Player"))
+        {
+            foreach (ContactPoint contact in collision.contacts)
+            {
+                if (Vector3.Dot(contact.normal, Vector3.up) > 0.7f)
+                {
+                    Rigidbody rb = collision.collider.GetComponent<Rigidbody>();
+                    if (rb)
+                        rb.AddForce(Vector3.up * 5f + transform.forward * 2f, ForceMode.Impulse);
+                }
+            }
+        }
+    }
+
+    public bool isAlive() => Health.BaseValue > 0;
 }

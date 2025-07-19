@@ -78,7 +78,7 @@ public class AirstrikeBeacon : MonoBehaviour
             Vector2 offset = Random.insideUnitCircle * strikeRadius;
             Vector3 strikePos = groundPos + new Vector3(offset.x, 0, offset.y);
 
-
+            // Spawn projectile
             if (projectilePrefab)
             {
                 Vector3 startPos = strikePos + Vector3.up * projectileHeight;
@@ -90,12 +90,12 @@ public class AirstrikeBeacon : MonoBehaviour
 
             yield return new WaitForSeconds(0.2f);
 
+            // Explosion VFX
             GameObject explosion = Instantiate(explosionPrefab, strikePos, Quaternion.identity);
-            explosion.transform.localScale *= 1.6f;
-            // Instantiate(explosionPrefab, strikePos, Quaternion.identity);
+            explosion.transform.localScale = Vector3.one * strikeRadius * 0.4f;
 
-            Collider[] hits = Physics.OverlapSphere(strikePos, 4.0f);
-
+            // Damage all in radius
+            Collider[] hits = Physics.OverlapSphere(strikePos, strikeRadius);
             foreach (Collider hitc in hits)
             {
                 EnemyBase enemy = hitc.GetComponent<EnemyBase>();
@@ -103,6 +103,7 @@ public class AirstrikeBeacon : MonoBehaviour
                     enemy.TakeDamage(damage, player);
             }
 
+            // Camera shake
             CameraShake.Instance?.ShakeCamera(0.5f, 0.3f);
             yield return new WaitForSeconds(timeBetweenStrikes);
         }

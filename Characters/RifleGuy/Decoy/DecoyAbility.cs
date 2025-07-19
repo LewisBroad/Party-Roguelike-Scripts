@@ -8,6 +8,12 @@ public class DecoyAbility : AbilityBase
 
     public override void ActivateAbility(GameObject player)
     {
+        if(!IsReady() || decoyPrefab == null)
+        {
+            Debug.LogWarning("DecoyAbility: Cannot activate, either not ready or prefab is missing.");
+            return;
+        }
+        cooldownTimer = cooldown; // Reset cooldown timer
         GameObject decoy = Instantiate(decoyPrefab, player.transform.position + Vector3.up, Quaternion.identity);
 
         if (decoy.TryGetComponent(out Rigidbody rb))

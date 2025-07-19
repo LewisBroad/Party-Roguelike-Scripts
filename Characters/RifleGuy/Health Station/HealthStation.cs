@@ -13,6 +13,7 @@ public class HealthStation : MonoBehaviour
     private float healPerSecond;
     private float healRadius;
 
+
     public GameObject healingAura;
     private SphereCollider auraCollider;
     private bool hasRisen = false;
@@ -152,6 +153,10 @@ public class HealthStation : MonoBehaviour
           //  Destroy(healingAura.gameObject, lifetime); // Destroy the healing aura after the station expires
 
         }
+    }
+    public bool IsInside(Vector3 position)
+    {
+        return Vector3.Distance(transform.position, position) <= healRadius;
     }
 }
 
